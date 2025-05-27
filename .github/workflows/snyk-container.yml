@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Snyk test and output SARIF
         run: |
-          snyk test --docker python:3.7 --file=Dockerfile --sarif-file-output=snyk.sarif || true
+          snyk container test python:3.7 --file=Dockerfile --sarif-file-output=snyk.sarif || true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
