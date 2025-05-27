@@ -2,35 +2,33 @@ name: Snyk Container Scan
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
   snyk:
     name: Snyk Scan
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Install Snyk CLI
-        run: npm install -g snyk
+    - name: Set up Snyk
+      uses: snyk/actions/setup@v2
 
-      - name: Authenticate Snyk
-        run: snyk auth ${{ secrets.SNYK_TOKEN }}
+    - name: Authenticate Snyk
+      run: snyk auth ${{ secrets.SNYK_TOKEN }}
 
-      - name: Pull Docker image
-        run: docker pull python:3.7
+    - name: Run Snyk scan on container image
+      run: snyk container test node:14 --file=Dockerfile --sarif-file-output=snyk.sarif || true
 
-      - name: Run Snyk test and output SARIF
-        run: |
-          snyk container test --file=Dockerfile node:14 --sarif-file-output=snyk.sarif || true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      - name: Upload SARIF to GitHub
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: snyk.sarif
-
+    - name: Upload Snyk scan result to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: snyk.sarif
